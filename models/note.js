@@ -6,10 +6,22 @@ mongoose.connect(url)
   .then(result => { console.log('connected to MongoDB') })
   .catch((error) => { console.log('error connecting to MongoDB:', error.message) })
 const noteSchema = new mongoose.Schema({
-  content: String,
-  date: Date,
+  content: {
+    type: String,
+    minLength: 5,
+    required: true
+  },
+  date: {
+    type: Date,
+    required: true
+  },
   important: Boolean,
-})
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }
+
+  })
 
 noteSchema.set('toJSON', {
   transform: (document, returnedObject) => {
