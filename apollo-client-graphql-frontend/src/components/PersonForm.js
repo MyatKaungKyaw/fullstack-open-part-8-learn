@@ -11,12 +11,8 @@ const PersonForm = ({ setError }) => {
   const [createPerson] = useMutation(CREATE_PERSON, {
     refetchQueries: [{ query: ALL_PERSONS }],
     onError: (error) => {
-      console.log(error)
-      const errors = error.graphQLErrors[0].extensions
-      console.log(errors)
-      const messages = Object.values(errors).map(e => e.message).join('\n')
-      console.log(messages)
-      setError(messages)
+      const message = error.graphQLErrors[0].extensions.stacktrace[0]
+      setError(message)
     },
   })
   const submit = (event) => {
