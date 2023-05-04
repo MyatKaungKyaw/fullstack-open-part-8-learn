@@ -6,7 +6,7 @@ const mongoose = require('mongoose')
 const jwt = require('jsonwebtoken')
 
 mongoose.set('strictQuery', false)
-const Person = require('./models/person')
+const Person = require('./models/Person')
 
 require('dotenv').config()
 
@@ -127,7 +127,7 @@ const resolvers = {
       try {
         await person.save()
       } catch (error) {
-        thorw new GraphQLError('Saving person failed',{
+        throw new GraphQLError('Saving person failed',{
           extensions:{
             code: 'BAD_USER_INPUT',
             invalidArgs: args.name,
@@ -142,7 +142,7 @@ const resolvers = {
       try {
         await person.save()
       } catch (error) {
-        thorw new GraphQLError('Saving number failed',{
+        throw new GraphQLError('Saving number failed',{
           extensions:{
             code: 'BAD_USER_INPUT',
             invalidArgs: args.name,
