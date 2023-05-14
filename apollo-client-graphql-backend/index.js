@@ -76,6 +76,9 @@ const typeDefs = `
       username: String!
       password: String!
     ): Token
+    addAsFriend(
+      name: String!
+    ): User
   }
 `
 
@@ -90,6 +93,7 @@ const resolvers = {
       return Person.find({ phone: { $exists: args.phone === 'YES' } })
     },
     findPerson: async (root, args) => Person.findOne({ name: args.name }),
+    me : (root, args, context) => context.currentUser
   },
   Person: {
     address: (root) => {
@@ -100,10 +104,22 @@ const resolvers = {
     },
   },
   Mutation: {
-    addPerson: async (root, args) => {
+    addPerson: async (root, args, context) => {
       const person = new Person({ ...args })
+      const currentUser = context.currentUser
+
+      if(!currentUser){
+        throw new GraphQLError('not authenticated',{
+          extensions:{
+            code: 'BAD_USER_INPUT',
+          }
+        })
+      }
+      
       try {
         const res = await person.save()
+        currentUser.friends = currentUser.friends.concat(person)
+        await currentUser.save()
         return res
       } catch (error) {
         throw new GraphQLError('Saving person failed',{
@@ -162,6 +178,22 @@ const resolvers = {
   
       return { value: jwt.sign(userForToken, process.env.JWT_SECRET) }
     },
+    addAsFriend: async (root,args,{currentUser}) => {
+      const isFriend = person => currentUser.friends.map(friend => friend._id.toString().includes(person._id.toString()))
+
+      if(!currentUser){
+        throw new GraphQLError('wrong credentials',{
+          extensions:{ code: 'BAD_USER_INPUT'}
+        })
+      }
+
+      const person = await Person.findOne({name: args.name}))
+      if(!isFriend(person)){
+        currentUser.friends = currentUser.friends.concat(person)
+      }
+      await currentUser.save()
+      return currentUser
+    }
   },
 }
 
@@ -173,6 +205,17 @@ const server = new ApolloServer({
 
 startStandaloneServer(server, {
   listen: { port: 4000 },
+    context: async ({ req, res }) => {   
+      const auth = req ? req.headers.authorization : null
+        if (auth && auth.startsWith('Bearer ')) {
+          const decodedToken = jwt.verify(     
+            auth.substring(7), process.env.JWT_SECRET  
+          )     
+            const currentUser = await User 
+            .findById(decodedToken.id).populate('friends')   
+            return { currentUser } 
+        } 
+    },
 }).then(({ url }) => {
   console.log(`Server ready at ${url}`)
 })
