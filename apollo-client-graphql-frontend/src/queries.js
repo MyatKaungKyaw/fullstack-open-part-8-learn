@@ -43,7 +43,7 @@ export const FIND_PERSON = gql`
   }
 `
 
-export const EDIT_NUMBER=gql`
+export const EDIT_NUMBER = gql`
   mutation editNumber($name:String!, $phone:String!){
     editNumber(name:$name,phone:$phone){
       name
@@ -53,6 +53,13 @@ export const EDIT_NUMBER=gql`
         city
       }
       id
+    }
+  }
+`
+export const LOGIN = gql`
+  mutation Login($username: String!, $password: String!) {
+    login(username: $username, password: $password) {
+      value
     }
   }
 `
