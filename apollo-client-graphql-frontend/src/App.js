@@ -28,14 +28,11 @@ const App = () => {
   if (!token) {
     return (
       <>
-        <Notify errorMessage={errorMessage} />
-        <h2>Login</h2>
-        <form>
-          <LoginForm
-            setToken={setToken}
-            setError={notify}
-          />
-        </form>
+        <Notify message={errorMessage} />
+        <LoginForm
+          setToken={setToken}
+          setError={notify}
+        />
       </>
     )
   }
