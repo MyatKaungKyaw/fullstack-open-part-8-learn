@@ -187,7 +187,7 @@ const resolvers = {
         })
       }
 
-      const person = await Person.findOne({name: args.name}))
+      const person = await Person.findOne({name: args.name})
       if(!isFriend(person)){
         currentUser.friends = currentUser.friends.concat(person)
       }
