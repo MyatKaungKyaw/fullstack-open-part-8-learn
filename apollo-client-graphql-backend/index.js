@@ -1,15 +1,31 @@
 const { ApolloServer } = require('@apollo/server')
 const { startStandaloneServer } = require('@apollo/server/standalone')
+const { expressMiddleware } = require('@apollo/server/express4')
+const { ApolloServerPluginDrainHttpServer } = require('@apollo/server/plugin/drainHttpServer')
+const { makeExecutableSchema } = require('@graphql-tools/schema')
 const { v1: uuid } = require('uuid')
 const { GraphQLError } = require('graphql')
-const mongoose = require('mongoose')
 const jwt = require('jsonwebtoken')
+const express = require('express')
+const cors = require('cors')
+const http = require('http')
+const { WebSocketServer } = require('ws')
+const { useServer } = require('graphql-ws/lib/use/ws')
 
-mongoose.set('strictQuery', false)
+
+const JWT_SECRET = process.env.JWT_SECRET
+
+const mongoose = require('mongoose')
+
 const Person = require('./models/Person')
 const User = require('./models/User')
 
-require('dotenv').config()
+const typeDefs = require('./schema')
+const resolvers = require('./resolvers')
+
+mongoose.set('strictQuery', false)
+
+// require('dotenv').config()
 
 const MONGODB_URI = process.env.MONGODB_URI
 
@@ -23,16 +39,43 @@ mongoose.connect(MONGODB_URI)
     console.log('error connection to MongoDB:', error.message)
   })
 
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-})
+const start = async () => {
+  const app = express()
+  const httpServer = http.createServer(app)
 
+  const wsServer = new WebSocketServer({
+    server: httpServer,
+    path: '/',
+  })
 
-startStandaloneServer(server, {
-  listen: { port: 4000 },
-    context: async ({ req, res }) => {   
-      const auth = req ? req.headers.authorization : null
+  cosnt schema = makeExecutableSchema({typeDefs,resolvers,})
+  const serverCleanup = useServer({schema},wsServer)
+  
+  const server = new ApolloServer({
+    schema,
+    plugins: [
+      ApolloServerPluginDrainHttpServer({httpServer}),
+      {
+        async serverWillStart(){
+          return {
+            async drainSever(){
+              await serverCleanup.dispose()
+            }
+          }
+        }
+      }
+    ]
+  })
+
+  await server.start()
+
+  app.use(
+    '/',
+    cors(),
+    express.json(),
+    expressMiddleware(server,{
+      context: async ({ req, res }) => {   
+        const auth = req ? req.headers.authorization : null
         if (auth && auth.startsWith('Bearer ')) {
           const decodedToken = jwt.verify(     
             auth.substring(7), process.env.JWT_SECRET  
@@ -41,7 +84,14 @@ startStandaloneServer(server, {
             .findById(decodedToken.id).populate('friends')   
             return { currentUser } 
         } 
-    },
-}).then(({ url }) => {
-  console.log(`Server ready at ${url}`)
-})
+      }
+    })
+  )
+
+  const PORT = 4000
+  httpServer.listen(PORT,() =>{
+    console.log(`Server is now running on http://localhost:${PORT}`)
+  })
+}
+
+start()

@@ -26,6 +26,10 @@ const typeDefs = `
     value: String!
   }
 
+  type Subscription{
+    personAdded: Person!
+  }
+
   type Query {
     personCount: Int!
     allPersons(phone: YesNo): [Person!]!
