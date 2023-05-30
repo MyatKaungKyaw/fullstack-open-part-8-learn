@@ -1,8 +1,9 @@
-
 const { GraphQLError } = require('graphql')
 const jwt = require('jsonwebtoken')
 const Person = require('./models/Person')
 const User = require('./models/User')
+const {PubSub} = require('graphql-subscriptions')
+cosnt pubSub = new PubSub()
 
 const resolvers = {
   Query: {
@@ -42,6 +43,7 @@ const resolvers = {
         const res = await person.save()
         currentUser.friends = currentUser.friends.concat(person)
         await currentUser.save()
+        pubsub.publish('PERSON_ADDED',{personAdded: person})
         return res
       } catch (error) {
         throw new GraphQLError('Saving person failed',{
@@ -118,6 +120,11 @@ const resolvers = {
       return currentUser
     }
   },
+  Subscription:{
+    personAdded:{
+      subscribe:() => pubsub.asyncIterator('PERSON_ADDED')
+    },
+  }
 }
 
 module.exports = resolvers
