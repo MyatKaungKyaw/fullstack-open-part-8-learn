@@ -48,7 +48,7 @@ const start = async () => {
     path: '/',
   })
 
-  cosnt schema = makeExecutableSchema({typeDefs,resolvers,})
+  const schema = makeExecutableSchema({typeDefs,resolvers,})
   const serverCleanup = useServer({schema},wsServer)
   
   const server = new ApolloServer({

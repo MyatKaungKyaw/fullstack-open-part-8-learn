@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken')
 const Person = require('./models/Person')
 const User = require('./models/User')
 const {PubSub} = require('graphql-subscriptions')
-cosnt pubSub = new PubSub()
+const pubSub = new PubSub()
 
 const resolvers = {
   Query: {
