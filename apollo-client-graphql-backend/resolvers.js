@@ -43,7 +43,7 @@ const resolvers = {
         const res = await person.save()
         currentUser.friends = currentUser.friends.concat(person)
         await currentUser.save()
-        pubsub.publish('PERSON_ADDED',{personAdded: person})
+        pubSub.publish('PERSON_ADDED',{personAdded: person})
         return res
       } catch (error) {
         throw new GraphQLError('Saving person failed',{
@@ -122,7 +122,7 @@ const resolvers = {
   },
   Subscription:{
     personAdded:{
-      subscribe:() => pubsub.asyncIterator('PERSON_ADDED')
+      subscribe:() => pubSub.asyncIterator('PERSON_ADDED')
     },
   }
 }
