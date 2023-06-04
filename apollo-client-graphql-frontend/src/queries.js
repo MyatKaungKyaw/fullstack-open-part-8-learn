@@ -1,5 +1,7 @@
 import { gql } from '@apollo/client'
 
+
+
 const PERSON_DETAILS = gql`
   fragment PersonDetails on Person {
     id
@@ -17,8 +19,8 @@ export const ALL_PERSONS = gql`
     allPersons{
       ...PersonDetails
     }
-    ${PERSON_DETAILS}
   }
+  ${PERSON_DETAILS}
 `
 
 export const CREATE_PERSON = gql`
@@ -31,8 +33,8 @@ export const CREATE_PERSON = gql`
     ){
       ...PersonDetails
     }
-    ${PERSON_DETAILS}
   }
+  ${PERSON_DETAILS}
 `
 
 export const FIND_PERSON = gql`
@@ -72,7 +74,9 @@ export const LOGIN = gql`
 
 export const PERSON_ADDED = gql`
   subscription PersonAdded {
-    ...PersonDetails
+    personAdded {
+      ...PersonDetails
+    }
   }
   ${PERSON_DETAILS}
 `
