@@ -12,9 +12,11 @@ const App = () => {
   const result = useQuery(ALL_PERSONS)
   const client = useApolloClient()
 
-  useSubscription(PERSON_ADDED,{
-    onData:({data})=>{
-      console.log(data)
+  useSubscription(PERSON_ADDED, {
+    onData: ({ data }) => {
+      const addedPerson = data.data.personAdded
+      notify(`${addedPerson.name} is added`)
+      updateCache(client.cache, { query: ALL_PERSONS }, addedPerson)
     }
   })
 
@@ -66,6 +68,24 @@ const Notify = ({ message }) => {
   return (
     <div style={{ color: 'red' }}>{message}</div>
   )
+}
+
+// function that takes care of manipulating cache
+export const updateCache = (cache, query, addedPerson) => {
+  // helper that is used to eliminate saving same person twice
+  const uniqByName = (a) => {
+    let seen = new Set()
+    return a.filter((item) => {
+      let k = item.name
+      return seen.has(k) ? false : seen.add(k)
+    })
+  }
+
+  cache.updateQuery(query, ({ allPersons }) => {
+    return {
+      allPersons: uniqByName(allPersons.concat(addedPerson)),
+    }
+  })
 }
 
 export default App
